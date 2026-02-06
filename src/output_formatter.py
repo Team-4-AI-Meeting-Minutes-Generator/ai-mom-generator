@@ -4,14 +4,16 @@ def format_key_points(key_points):
     """
     Formats key discussion points as professional bullet points
     """
-    output = "### 🧠 Key Discussion Points\n"
+    output = "==============================\n"
+    output += "🧠 KEY DISCUSSION POINTS\n"
+    output += "==============================\n"
 
     if not key_points:
         output += "• No key discussion points identified.\n\n"
         return output
 
     for point in key_points:
-        output += f"• {point}\n"
+        output += f"• {point.strip()}\n"
 
     output += "\n"
     return output
@@ -19,22 +21,32 @@ def format_key_points(key_points):
 
 def format_action_items(action_items):
     """
-    Formats action items as professional bullet statements
+    Formats action items in a structured professional format
     """
-    output = "### ✅ Action Items\n"
+    output = "==============================\n"
+    output += "✅ ACTION ITEMS\n"
+    output += "==============================\n"
 
     if not action_items:
         output += "• No action items identified.\n\n"
         return output
 
-    for item in action_items:
-        task = item.get("task", "Task not specified")
-        owner = item.get("owner", "Owner not specified")
-        deadline = item.get("deadline", "Deadline not specified")
+    for idx, item in enumerate(action_items, 1):
 
-        output += f"• **{owner}** will {task.lower()} by **{deadline}**\n"
+        action_text = item.get("action", "Task not specified")
+        owner = item.get("owner")
+        deadline = item.get("deadline")
 
-    output += "\n"
+        output += f"{idx}. {action_text}\n"
+
+        if owner:
+            output += f"   ↳ Owner    : {owner}\n"
+
+        if deadline:
+            output += f"   ↳ Deadline : {deadline}\n"
+
+        output += "\n"
+
     return output
 
 
