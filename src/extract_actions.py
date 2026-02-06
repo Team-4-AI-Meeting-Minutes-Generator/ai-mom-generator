@@ -80,10 +80,27 @@ def get_actions_regex(text: str) -> List[Dict]:
         has_verb = any(w in lower_sent.split() for w in ACTION_VERBS)
         
         if has_modal or has_verb:
+            # Attempt to extract owner (simple heuristic: word before modal/verb)
+            owner = "Unknown"
+            
+            # Look for explicit subject patterns like "John will", "I need to", "She must"
+            # Pattern: (Subject) (Modal)
+            # Match Names (Capitalized) or Pronouns (case-insensitive)
+            match = re.search(r'\b([A-Z][a-z]+|I|i|We|we|He|he|She|she|They|they)\b\s+(?:will|must|should|can|could)', sentence)
+            if match:
+                owner = match.group(1).title() # Normalize to Title Case (e.g. "i" -> "I")
+            
+            # Attempt to extract deadline
+            # Pattern: by (Day/Time), on (Date)
+            deadline = None
+            date_match = re.search(r'\b(?:by|on|at|before)\s+((?:[0-9]{1,2}(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*)|(?:Monday|Tuesday|Wednesday|Thursday|Friday)|(?:tomorrow|next week))', sentence, re.IGNORECASE)
+            if date_match:
+                deadline = date_match.group(1)
+
             actions.append({
                 "action": sentence,
-                "owner": "Unknown (NLP missing)",
-                "deadline": None
+                "owner": owner,
+                "deadline": deadline
             })
             
     return actions

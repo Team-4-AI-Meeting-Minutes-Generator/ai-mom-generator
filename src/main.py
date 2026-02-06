@@ -51,6 +51,29 @@ def process_input(file_path):
         print("📄 Reading transcript file...")
         return read_text_file(file_path)
 
+    elif ext == ".json":
+        logging.info("Reading JSON transcript file...")
+        print("📄 Reading JSON transcript file...")
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+                
+            if "transcript" not in data:
+                 raise ValueError("JSON must contain 'transcript' key.")
+                 
+            # Convert structured transcript to text format
+            full_text = []
+            for entry in data["transcript"]:
+                speaker = entry.get("speaker", "Unknown")
+                utterance = entry.get("utterance", "")
+                full_text.append(f"{speaker}: {utterance}")
+                
+            return "\n".join(full_text)
+            
+        except Exception as e:
+             logging.error(f"Error reading JSON file: {e}")
+             raise
+
     elif ext in [".mp3", ".wav", ".m4a", ".mp4", ".mpeg"]:
         logging.info("Detected audio file. Starting transcription...")
         print("🎙️  Audio file detected. Starting transcription (this may take a while)...")
@@ -58,7 +81,7 @@ def process_input(file_path):
         return audio_to_text(file_path)
 
     else:
-        raise ValueError(f"Unsupported file format: {ext}. Supported: .txt, .mp3, .wav, .m4a")
+        raise ValueError(f"Unsupported file format: {ext}. Supported: .txt, .json, .mp3, .wav, .m4a")
 
 
 # ---------------------------

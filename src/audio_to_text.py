@@ -1,5 +1,26 @@
 import whisper
 import os
+import shutil
+import imageio_ffmpeg
+
+# Setup ffmpeg: Ensure it's available in the environment
+ffmpeg_exe_path = imageio_ffmpeg.get_ffmpeg_exe()
+ffmpeg_dir = os.path.dirname(ffmpeg_exe_path)
+
+# 1. Inject into PATH
+os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ["PATH"]
+
+# 2. Fallback: Copy to CWD if not reachable (common Windows issue with PATH updates in runtime)
+local_ffmpeg = os.path.join(os.getcwd(), "ffmpeg.exe")
+if not shutil.which("ffmpeg") and not os.path.exists(local_ffmpeg):
+    print(f"   ℹ️  ffmpeg not found in PATH, copying from {ffmpeg_exe_path} to {local_ffmpeg}...")
+    try:
+        shutil.copy(ffmpeg_exe_path, local_ffmpeg)
+        os.environ["PATH"] = os.getcwd() + os.pathsep + os.environ["PATH"]
+    except Exception as e:
+        print(f"   ⚠️ Could not copy ffmpeg: {e}")
+
+print(f"   ℹ️  ffmpeg path configured: {shutil.which('ffmpeg') or 'Not Found'}")
 
 
 def audio_to_text(audio_path, output_path=None):
