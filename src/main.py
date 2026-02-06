@@ -8,8 +8,6 @@ import logging
 from preprocess import clean_text
 from extract_points import get_key_points
 from extract_actions import get_actions
-from extract_entities import get_entities
-from audio_to_text import convert_audio
 from output_formatter import format_output
 
 
@@ -30,9 +28,6 @@ logging.basicConfig(
 # Read Text File
 # ---------------------------
 def read_text_file(file_path):
-    """
-    Reads transcript text file
-    """
     try:
         with open(file_path, "r", encoding="utf-8") as file:
             return file.read()
@@ -45,36 +40,23 @@ def read_text_file(file_path):
 # Process Input File
 # ---------------------------
 def process_input(file_path):
-    """
-    Detects file type and returns transcript text
-    """
 
     if not os.path.exists(file_path):
         raise FileNotFoundError("File does not exist.")
 
-    # Audio file handling
-    if file_path.lower().endswith((".mp3", ".wav", ".m4a")):
-        logging.info("Converting audio to text...")
-        print("🎧 Converting audio to text...")
-        return convert_audio(file_path)
-
-    # Text file handling
-    elif file_path.lower().endswith(".txt"):
+    if file_path.lower().endswith(".txt"):
         logging.info("Reading transcript file...")
         print("📄 Reading transcript file...")
         return read_text_file(file_path)
 
     else:
-        raise ValueError("Unsupported file format. Use .txt, .mp3, .wav, .m4a")
+        raise ValueError("Currently only .txt supported in stable mode.")
 
 
 # ---------------------------
 # Main Pipeline
 # ---------------------------
 def run_pipeline(file_path, meeting_id=None):
-    """
-    Executes complete AI Meeting Minutes pipeline
-    """
 
     try:
         start_time = time.time()
@@ -82,7 +64,7 @@ def run_pipeline(file_path, meeting_id=None):
         print("\n🚀 Starting AI Meeting Minutes Generator...\n")
         logging.info("Pipeline started")
 
-        # Step 1: Get raw transcript
+        # Step 1: Get transcript
         raw_text = process_input(file_path)
 
         # Step 2: Clean transcript
@@ -97,21 +79,15 @@ def run_pipeline(file_path, meeting_id=None):
         print("📌 Extracting action items...")
         actions = get_actions(cleaned_text)
 
-        # Step 5: Extract responsible persons & deadlines
-        print("👤 Extracting responsible persons & deadlines...")
-        entities = get_entities(cleaned_text)
-
-        # Step 6: Structure final output
-        print("📊 Formatting output...")
+        # Step 5: Prepare structured output
         structured_output = {
             "meeting_id": meeting_id if meeting_id else "N/A",
-            "discussion_points": key_points,
+            "key_points": key_points,
             "action_items": actions,
-            "entities": entities,
             "processed_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
-        # Save JSON Output
+        # Step 6: Save JSON output
         if not os.path.exists("output"):
             os.makedirs("output")
 
@@ -127,9 +103,14 @@ def run_pipeline(file_path, meeting_id=None):
 
         logging.info(f"Execution time: {execution_time} seconds")
 
-        print("\n✅ Meeting Minutes Generated Successfully!")
+        # Step 7: Print formatted professional output
+        print("\n📊 FORMATTED MEETING MINUTES\n")
+        formatted_result = format_output(structured_output)
+        print(formatted_result)
+
+        print("✅ Meeting Minutes Generated Successfully!")
         print(f"⏱ Execution Time: {execution_time} seconds")
-        print(f"📁 Output saved at: {output_file}\n")
+        print(f"📁 JSON saved at: {output_file}\n")
 
         return structured_output
 
@@ -144,15 +125,9 @@ def run_pipeline(file_path, meeting_id=None):
 # ---------------------------
 if __name__ == "__main__":
 
-    # Default file path
     input_file = "data/sample_transcript.txt"
 
-    # Allow file input from terminal
     if len(sys.argv) > 1:
         input_file = sys.argv[1]
 
-    result = run_pipeline(input_file)
-
-    if result:
-        print("📌 Final Structured Output:")
-        print(json.dumps(result, indent=4))
+    run_pipeline(input_file)
