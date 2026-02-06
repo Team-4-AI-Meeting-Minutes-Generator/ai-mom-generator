@@ -1,8 +1,13 @@
-import spacy
 from typing import List, Dict
 
-# Load spaCy model
-nlp = spacy.load("en_core_web_sm")
+try:
+    import spacy
+    # Load spaCy model
+    nlp = spacy.load("en_core_web_sm")
+    SPACY_AVAILABLE = True
+except Exception:
+    SPACY_AVAILABLE = False
+    print("Warning: spaCy not found or model missing. Using regex fallback.")
 
 
 ACTION_VERBS = {
@@ -53,10 +58,43 @@ def extract_deadline(doc):
     return None
 
 
+def get_actions_regex(text: str) -> List[Dict]:
+    """
+    Fallback regex-based action extraction.
+    """
+    import re
+    actions = []
+    
+    # Simple sentence splitting
+    sentences = re.split(r'[.!?]', text)
+    
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+            
+        lower_sent = sentence.lower()
+        
+        # Check for modals or action verbs
+        has_modal = any(w in lower_sent.split() for w in MODAL_WORDS)
+        has_verb = any(w in lower_sent.split() for w in ACTION_VERBS)
+        
+        if has_modal or has_verb:
+            actions.append({
+                "action": sentence,
+                "owner": "Unknown (NLP missing)",
+                "deadline": None
+            })
+            
+    return actions
+
+
 def get_actions(text: str) -> List[Dict]:
     """
     Extract structured action items from transcript.
     """
+    if not SPACY_AVAILABLE:
+        return get_actions_regex(text)
 
     doc = nlp(text)
     actions = []

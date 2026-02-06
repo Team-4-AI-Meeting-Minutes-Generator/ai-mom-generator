@@ -15,10 +15,20 @@ def audio_to_text(audio_path, output_path=None):
     """
 
     # Load model (base is good balance of speed & accuracy)
-    model = whisper.load_model("base")
+    try:
+        print("   Loading Whisper model...")
+        model = whisper.load_model("base")
+    except Exception as e:
+        print(f"Error loading Whisper model: {e}")
+        return ""
 
     # Transcribe audio
-    result = model.transcribe(audio_path)
+    print(f"   Transcribing {os.path.basename(audio_path)}...")
+    try:
+        result = model.transcribe(audio_path)
+    except Exception as e:
+        print(f"Error during transcription: {e}")
+        return ""
 
     # Format transcript using segments
     formatted_transcript = ""

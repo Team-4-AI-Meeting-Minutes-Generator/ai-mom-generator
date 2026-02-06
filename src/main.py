@@ -44,13 +44,21 @@ def process_input(file_path):
     if not os.path.exists(file_path):
         raise FileNotFoundError("File does not exist.")
 
-    if file_path.lower().endswith(".txt"):
+    ext = os.path.splitext(file_path)[1].lower()
+
+    if ext == ".txt":
         logging.info("Reading transcript file...")
         print("📄 Reading transcript file...")
         return read_text_file(file_path)
 
+    elif ext in [".mp3", ".wav", ".m4a", ".mp4", ".mpeg"]:
+        logging.info("Detected audio file. Starting transcription...")
+        print("🎙️  Audio file detected. Starting transcription (this may take a while)...")
+        from audio_to_text import audio_to_text
+        return audio_to_text(file_path)
+
     else:
-        raise ValueError("Currently only .txt supported in stable mode.")
+        raise ValueError(f"Unsupported file format: {ext}. Supported: .txt, .mp3, .wav, .m4a")
 
 
 # ---------------------------

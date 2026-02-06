@@ -1,0 +1,38 @@
+{
+    "meeting_id": "N/A",
+    "key_points": [
+        "meeting minutes - project alpha date: 2023-10-27 attendees: alice, bob, charlie the meeting started at 10:00 am",
+        "alice discussed the need for a new marketing strategy",
+        "bob agreed effectively",
+        "we decided to launch the campaign next week",
+        "meeting adjourned"
+    ],
+    "action_items": [
+        {
+            "action": "alice discussed the need for a new marketing strategy",
+            "owner": "Unknown (NLP missing)",
+            "deadline": null
+        },
+        {
+            "action": "charlie will prepare the slide deck by friday",
+            "owner": "Unknown (NLP missing)",
+            "deadline": null
+        },
+        {
+            "action": "alice needs to review the budget by monday",
+            "owner": "Unknown (NLP missing)",
+            "deadline": null
+        },
+        {
+            "action": "the team should update the documentation",
+            "owner": "Unknown (NLP missing)",
+            "deadline": null
+        },
+        {
+            "action": "bob must fix the login bug immediately",
+            "owner": "Unknown (NLP missing)",
+            "deadline": null
+        }
+    ],
+    "processed_at": "2026-02-06 17:35:32"
+}
