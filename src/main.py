@@ -1,5 +1,8 @@
 import os
 import sys
+import json
+import time
+import logging
 
 # Import team modules
 from preprocess import clean_text
@@ -10,6 +13,22 @@ from audio_to_text import convert_audio
 from output_formatter import format_output
 
 
+# ---------------------------
+# Logging Configuration
+# ---------------------------
+if not os.path.exists("logs"):
+    os.makedirs("logs")
+
+logging.basicConfig(
+    filename="logs/app.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+
+# ---------------------------
+# Read Text File
+# ---------------------------
 def read_text_file(file_path):
     """
     Reads transcript text file
@@ -18,78 +37,122 @@ def read_text_file(file_path):
         with open(file_path, "r", encoding="utf-8") as file:
             return file.read()
     except Exception as e:
-        print(f"Error reading text file: {e}")
-        sys.exit(1)
+        logging.error(f"Error reading text file: {e}")
+        raise
 
 
+# ---------------------------
+# Process Input File
+# ---------------------------
 def process_input(file_path):
     """
     Detects file type and returns transcript text
     """
-    if not os.path.exists(file_path):
-        print("File does not exist.")
-        sys.exit(1)
 
-    # If audio file
-    if file_path.endswith((".mp3", ".wav", ".m4a")):
+    if not os.path.exists(file_path):
+        raise FileNotFoundError("File does not exist.")
+
+    # Audio file handling
+    if file_path.lower().endswith((".mp3", ".wav", ".m4a")):
+        logging.info("Converting audio to text...")
         print("🎧 Converting audio to text...")
         return convert_audio(file_path)
 
-    # If text file
-    elif file_path.endswith(".txt"):
+    # Text file handling
+    elif file_path.lower().endswith(".txt"):
+        logging.info("Reading transcript file...")
         print("📄 Reading transcript file...")
         return read_text_file(file_path)
 
     else:
-        print("Unsupported file format.")
-        sys.exit(1)
+        raise ValueError("Unsupported file format. Use .txt, .mp3, .wav, .m4a")
 
 
-def run_pipeline(file_path):
+# ---------------------------
+# Main Pipeline
+# ---------------------------
+def run_pipeline(file_path, meeting_id=None):
     """
-    Main pipeline execution
+    Executes complete AI Meeting Minutes pipeline
     """
 
-    print("\n🚀 Starting AI Meeting Minutes Generator...\n")
+    try:
+        start_time = time.time()
 
-    # Step 1: Get raw text
-    raw_text = process_input(file_path)
+        print("\n🚀 Starting AI Meeting Minutes Generator...\n")
+        logging.info("Pipeline started")
 
-    # Step 2: Clean text
-    print("🧹 Cleaning text...")
-    cleaned_text = clean_text(raw_text)
+        # Step 1: Get raw transcript
+        raw_text = process_input(file_path)
 
-    # Step 3: Extract key discussion points
-    print("🧠 Extracting key discussion points...")
-    key_points = get_key_points(cleaned_text)
+        # Step 2: Clean transcript
+        print("🧹 Cleaning text...")
+        cleaned_text = clean_text(raw_text)
 
-    # Step 4: Extract action items
-    print("📌 Extracting action items...")
-    actions = get_actions(cleaned_text)
+        # Step 3: Extract discussion points
+        print("🧠 Extracting key discussion points...")
+        key_points = get_key_points(cleaned_text)
 
-    # Step 5: Extract entities (person + deadlines)
-    print("👤 Extracting responsible persons & deadlines...")
-    entities = get_entities(cleaned_text)
+        # Step 4: Extract action items
+        print("📌 Extracting action items...")
+        actions = get_actions(cleaned_text)
 
-    # Step 6: Format final output
-    print("📊 Formatting output...")
-    format_output(
-        key_points=key_points,
-        actions=actions,
-        entities=entities
-    )
+        # Step 5: Extract responsible persons & deadlines
+        print("👤 Extracting responsible persons & deadlines...")
+        entities = get_entities(cleaned_text)
 
-    print("\n✅ Meeting Minutes Generated Successfully!\n")
+        # Step 6: Structure final output
+        print("📊 Formatting output...")
+        structured_output = {
+            "meeting_id": meeting_id if meeting_id else "N/A",
+            "discussion_points": key_points,
+            "action_items": actions,
+            "entities": entities,
+            "processed_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        # Save JSON Output
+        if not os.path.exists("output"):
+            os.makedirs("output")
+
+        output_file = f"output/meeting_minutes_{int(time.time())}.json"
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(structured_output, f, indent=4)
+
+        logging.info(f"Output saved to {output_file}")
+
+        end_time = time.time()
+        execution_time = round(end_time - start_time, 2)
+
+        logging.info(f"Execution time: {execution_time} seconds")
+
+        print("\n✅ Meeting Minutes Generated Successfully!")
+        print(f"⏱ Execution Time: {execution_time} seconds")
+        print(f"📁 Output saved at: {output_file}\n")
+
+        return structured_output
+
+    except Exception as e:
+        logging.error(f"Pipeline failed: {e}")
+        print(f"\n❌ Error occurred: {e}\n")
+        return None
 
 
+# ---------------------------
+# Entry Point
+# ---------------------------
 if __name__ == "__main__":
-    # You can change file path here for testing
+
+    # Default file path
     input_file = "data/sample_transcript.txt"
 
-    # OR allow user to pass file from terminal:
-    # python main.py data/meeting.mp3
+    # Allow file input from terminal
     if len(sys.argv) > 1:
         input_file = sys.argv[1]
 
-    run_pipeline(input_file)
-    
+    result = run_pipeline(input_file)
+
+    if result:
+        print("📌 Final Structured Output:")
+        print(json.dumps(result, indent=4))
