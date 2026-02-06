@@ -1,0 +1,45 @@
+{
+  "meeting_id": "OWN_01",
+  "date": "2026-02-06",
+  "meeting_type": "Project Planning & Dataset Design",
+  "duration_minutes": 45,
+
+  "participants": [
+    { "name": "Aman", "role": "Project Lead" },
+    { "name": "Riya", "role": "NLP Engineer" },
+    { "name": "Neha", "role": "Data Engineer" },
+    { "name": "Karan", "role": "Quality Reviewer" },
+    { "name": "Meera", "role": "Documentation Lead" }
+  ],
+
+  "transcript": [
+    {
+      "speaker": "Aman",
+      "utterance": "Good morning everyone. Let us begin the meeting. I will coordinate tasks and track deadlines."
+    },
+    {
+      "speaker": "Neha",
+      "utterance": "I will create detailed meeting transcripts with clear task assignments."
+    },
+    {
+      "speaker": "Riya",
+      "utterance": "I will extract key discussion points, action items, and deadlines from each transcript."
+    },
+    {
+      "speaker": "Aman",
+      "utterance": "Neha will deliver the first batch of 10 transcripts by 10th February 2026."
+    },
+    {
+      "speaker": "Karan",
+      "utterance": "I will complete quality review within two days after annotation."
+    },
+    {
+      "speaker": "Meera",
+      "utterance": "The first documentation draft will be ready by 18th February 2026."
+    },
+    {
+      "speaker": "Aman",
+      "utterance": "The final dataset deadline is 20th February 2026."
+    }
+  ]
+}
