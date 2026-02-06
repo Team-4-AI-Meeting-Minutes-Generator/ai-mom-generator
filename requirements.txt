@@ -1,0 +1,17 @@
+# Core
+python-dotenv
+
+# NLP
+spacy
+transformers
+torch
+
+# Audio to Text
+openai-whisper
+
+# Data Handling
+pandas
+
+# Utilities
+numpy
+scikit-learn
