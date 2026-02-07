@@ -16,6 +16,7 @@ pandas
 numpy
 scikit-learn
 
-# Google Generative AI
+# LLMs and APIs
 google-generativeai
 python-dotenv
+requests
