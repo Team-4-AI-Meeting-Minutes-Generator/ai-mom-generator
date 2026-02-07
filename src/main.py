@@ -9,6 +9,7 @@ from preprocess import clean_text
 from extract_points import get_key_points
 from extract_actions import get_actions
 from output_formatter import format_output
+from llm_extractor import extract_minutes
 
 
 # ---------------------------
@@ -102,13 +103,22 @@ def run_pipeline(file_path, meeting_id=None):
         print("🧹 Cleaning text...")
         cleaned_text = clean_text(raw_text)
 
-        # Step 3: Extract discussion points
-        print("🧠 Extracting key discussion points...")
-        key_points = get_key_points(cleaned_text)
+        # Step 3 & 4: Extract discussion points and action items
+        print("🤖 Using AI to extract meeting minutes...")
+        llm_results = extract_minutes(cleaned_text)
 
-        # Step 4: Extract action items
-        print("📌 Extracting action items...")
-        actions = get_actions(cleaned_text)
+        if llm_results:
+            key_points = llm_results.get("key_points", [])
+            actions = llm_results.get("action_items", [])
+        else:
+            print("⚠️ falling back to heuristic extraction...")
+            # Step 3: Extract discussion points (Fallback)
+            print("🧠 Extracting key discussion points...")
+            key_points = get_key_points(cleaned_text)
+
+            # Step 4: Extract action items (Fallback)
+            print("📌 Extracting action items...")
+            actions = get_actions(cleaned_text)
 
         # Step 5: Prepare structured output
         structured_output = {
