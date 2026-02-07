@@ -15,9 +15,4 @@ pandas
 # Utilities
 numpy
 scikit-learn
-openai
-
-# Backend API
-fastapi
-uvicorn
-python-multipart
+google-generativeai
