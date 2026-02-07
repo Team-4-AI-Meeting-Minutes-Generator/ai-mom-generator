@@ -12,6 +12,10 @@ env/
 .venv/
 
 # Distribution / packaging
+node_modules
+dist
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
