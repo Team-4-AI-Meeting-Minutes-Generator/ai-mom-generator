@@ -15,3 +15,7 @@ pandas
 # Utilities
 numpy
 scikit-learn
+
+# Google Generative AI
+google-generativeai
+python-dotenv
