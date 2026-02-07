@@ -16,3 +16,4 @@ pandas
 numpy
 scikit-learn
 google-generativeai
+openai
