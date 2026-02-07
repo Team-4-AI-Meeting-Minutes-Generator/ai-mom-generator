@@ -40,21 +40,24 @@ def read_text_file(file_path):
 # ---------------------------
 # Process Input File
 # ---------------------------
-def process_input(file_path):
+def process_input(file_path, silent=False):
 
     if not os.path.exists(file_path):
-        raise FileNotFoundError("File does not exist.")
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    if os.path.isdir(file_path):
+        raise ValueError(f"'{file_path}' is a directory, not a file. Please provide a path to a specific file (e.g., .txt or .mp3).")
 
     ext = os.path.splitext(file_path)[1].lower()
 
     if ext == ".txt":
         logging.info("Reading transcript file...")
-        print("📄 Reading transcript file...")
+        if not silent: print("📄 Reading transcript file...")
         return read_text_file(file_path)
 
     elif ext == ".json":
         logging.info("Reading JSON transcript file...")
-        print("📄 Reading JSON transcript file...")
+        if not silent: print("📄 Reading JSON transcript file...")
         try:
             with open(file_path, "r", encoding="utf-8") as file:
                 data = json.load(file)
@@ -77,47 +80,49 @@ def process_input(file_path):
 
     elif ext in [".mp3", ".wav", ".m4a", ".mp4", ".mpeg"]:
         logging.info("Detected audio file. Starting transcription...")
-        print("🎙️  Audio file detected. Starting transcription (this may take a while)...")
+        if not silent: print("🎙️  Audio file detected. Starting transcription (this may take a while)...")
         from audio_to_text import audio_to_text
         return audio_to_text(file_path)
 
     else:
-        raise ValueError(f"Unsupported file format: {ext}. Supported: .txt, .json, .mp3, .wav, .m4a")
+        file_name = os.path.basename(file_path)
+        actual_ext = ext if ext else "no extension"
+        raise ValueError(f"Unsupported file format: '{actual_ext}' for file '{file_name}'. Supported: .txt, .json, .mp3, .wav, .m4a")
 
 
 # ---------------------------
 # Main Pipeline
 # ---------------------------
-def run_pipeline(file_path, meeting_id=None):
+def run_pipeline(file_path, meeting_id=None, silent=False):
 
     try:
         start_time = time.time()
 
-        print("\n🚀 Starting AI Meeting Minutes Generator...\n")
+        if not silent: print("\n🚀 Starting AI Meeting Minutes Generator...\n")
         logging.info("Pipeline started")
 
         # Step 1: Get transcript
-        raw_text = process_input(file_path)
+        raw_text = process_input(file_path, silent=silent)
 
         # Step 2: Clean transcript
-        print("🧹 Cleaning text...")
+        if not silent: print("🧹 Cleaning text...")
         cleaned_text = clean_text(raw_text)
 
         # Step 3 & 4: Extract discussion points and action items
-        print("🤖 Using AI to extract meeting minutes...")
+        if not silent: print("🤖 Using AI to extract meeting minutes...")
         llm_results = extract_minutes(cleaned_text)
 
         if llm_results:
             key_points = llm_results.get("key_points", [])
             actions = llm_results.get("action_items", [])
         else:
-            print("⚠️ falling back to heuristic extraction...")
+            if not silent: print("⚠️ falling back to heuristic extraction...")
             # Step 3: Extract discussion points (Fallback)
-            print("🧠 Extracting key discussion points...")
+            if not silent: print("🧠 Extracting key discussion points...")
             key_points = get_key_points(cleaned_text)
 
             # Step 4: Extract action items (Fallback)
-            print("📌 Extracting action items...")
+            if not silent: print("📌 Extracting action items...")
             actions = get_actions(cleaned_text)
 
         # Step 5: Prepare structured output
@@ -128,36 +133,26 @@ def run_pipeline(file_path, meeting_id=None):
             "processed_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
-        # Step 6: Save JSON output
-        if not os.path.exists("output"):
-            os.makedirs("output")
-
-        output_file = f"output/meeting_minutes_{int(time.time())}.json"
-
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(structured_output, f, indent=4)
-
-        logging.info(f"Output saved to {output_file}")
-
         end_time = time.time()
         execution_time = round(end_time - start_time, 2)
 
         logging.info(f"Execution time: {execution_time} seconds")
 
-        # Step 7: Print formatted professional output
-        print("\n📊 FORMATTED MEETING MINUTES\n")
-        formatted_result = format_output(structured_output)
-        print(formatted_result)
+        # Step 6: Print formatted professional output
+        if not silent:
+            print("\n📊 FORMATTED MEETING MINUTES\n")
+            from output_formatter import format_output
+            formatted_result = format_output(structured_output)
+            print(formatted_result)
 
-        print("✅ Meeting Minutes Generated Successfully!")
-        print(f"⏱ Execution Time: {execution_time} seconds")
-        print(f"📁 JSON saved at: {output_file}\n")
+            print("✅ Meeting Minutes Generated Successfully!")
+            print(f"⏱ Execution Time: {execution_time} seconds\n")
 
         return structured_output
 
     except Exception as e:
         logging.error(f"Pipeline failed: {e}")
-        print(f"\n❌ Error occurred: {e}\n")
+        if not silent: print(f"\n❌ Error occurred: {e}\n")
         return None
 
 
@@ -166,9 +161,33 @@ def run_pipeline(file_path, meeting_id=None):
 # ---------------------------
 if __name__ == "__main__":
 
-    input_file = "data/sample_transcript.txt"
+    print("\n🚀 AI Meeting Minutes Generator")
+    print("Type 'exit' or 'quit' to close the application.\n")
 
+    # Check CLI arguments first
     if len(sys.argv) > 1:
-        input_file = sys.argv[1]
-
-    run_pipeline(input_file)
+        initial_file = sys.argv[1]
+        run_pipeline(initial_file)
+    
+    # Interactive loop
+    while True:
+        try:
+            user_input = input("\n📂 Enter path to transcript/audio file (or 'exit'): ").strip()
+            
+            if user_input.lower() in ["exit", "quit"]:
+                print("👋 Goodbye!")
+                break
+                
+            if not user_input:
+                continue
+                
+            if not os.path.exists(user_input):
+                print(f"❌ Error: File not found at '{user_input}'")
+                continue
+                
+            run_pipeline(user_input)
+        except EOFError:
+            break
+        except KeyboardInterrupt:
+            print("\n👋 Goodbye!")
+            break
